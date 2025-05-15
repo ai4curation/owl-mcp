@@ -1,0 +1,15 @@
+Prefix(ex:=<http://example.org/>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+Ontology(<http://example.org/test>
+  Declaration(Class(ex:Animal))
+  Declaration(Class(ex:Dog))
+  Declaration(Class(ex:Cat))
+  
+  SubClassOf(ex:Dog ex:Animal)
+  SubClassOf(ex:Cat ex:Animal)
+  
+  AnnotationAssertion(rdfs:label ex:Animal "Animal")
+  AnnotationAssertion(rdfs:label ex:Dog "Dog")
+  AnnotationAssertion(rdfs:label ex:Cat "Cat")
+)

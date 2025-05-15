@@ -1,0 +1,19 @@
+name: Codespell
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  codespell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: codespell-project/actions-codespell@v2
+        with:
+          check_filenames: true
+          check_hidden: true
+          skip: ".git,*.pdf,*.svg,*.lock,uv.lock"
+          ignore_words_file: .github/codespell-ignore.txt
