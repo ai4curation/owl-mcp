@@ -155,7 +155,7 @@ async def find_axioms(
         owl_file_path: Absolute path to the OWL file
         pattern: A string pattern to match against axiom strings
                 (simple substring matching)
-        limit: Maximum number of axioms to return (default: 100)
+        limit: (int) Maximum number of axioms to return (default: 100)
         include_labels: If True, include human-readable labels after ## in the output
         annotation_property: Optional annotation property IRI to use for labels 
                             (defaults to rdfs:label)
