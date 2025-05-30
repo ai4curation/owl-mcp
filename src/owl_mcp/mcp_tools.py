@@ -52,10 +52,14 @@ The server provides the following resources:
 
 
 @mcp.prompt()
-def ask_for_axioms_about(topic: str) -> str:
+def ask_for_axioms_about_prompt(topic: str) -> str:
     """Generates a user message asking for axioms matching a string."""
     return f"What axioms include the string '{topic}'?"
 
+@mcp.prompt()
+def add_subclass_of_prompt(child: str, parent: str) -> str:
+    """Generates a user message asking to add a subclass of axiom."""
+    return f"Add a subClassOf axiom where the subclass is '{child}' and the superclass is '{parent}'"
 
 # Dictionary to cache SimpleOwlAPI instances
 _api_instances = {}
@@ -118,6 +122,27 @@ async def add_axiom(owl_file_path: str, axiom_str: str) -> str:
     if success:
         return f"Successfully added axiom: {axiom_str}"
     return f"Failed to add axiom: {axiom_str}"
+
+@mcp.tool()
+async def add_axioms(owl_file_path: str, axiom_strs: List[str]) -> str:
+    """
+    Adds a list of axioms to the ontology, using OWL functional syntax.
+
+    Args:
+        owl_file_path: Absolute path to the OWL file
+        axiom_strs: List of string representation of the axiom in OWL functional syntax
+                 e.g., ["SubClassOf(:Dog :Animal)", ...]
+
+    Returns:
+        str: Success message or error
+    """
+    api = _get_api_instance(owl_file_path)
+    for axiom_str in axiom_strs:
+        success = api.add_axiom(axiom_str)
+        if not success:
+            return f"Failed to add axiom: {axiom_str}"
+
+    return f"Successfully added axioms: {axiom_strs}"
 
 
 @mcp.tool()
@@ -203,8 +228,10 @@ async def add_prefix(owl_file_path: str, prefix: str, uri: str) -> str:
 
     Args:
         owl_file_path: Absolute path to the OWL file
-        prefix: The prefix string (e.g., "ex:")
+        prefix: The prefix string (e.g., "ex")
         uri: The URI the prefix maps to (e.g., "http://example.org/")
+
+    Note that usually an ontology will contain standard prefixes for rdf, rdfs, owl, xsd
 
     Returns:
         str: Success message

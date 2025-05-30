@@ -28,6 +28,7 @@ dev = [
     "mkdocs-material>=9.0.0",
     "mkdocs-windmill",
     "mkdocstrings[python]>=0.21.0",
+    "pymdown-extensions>=10.0.0",
     "mypy>=1.0.0",
     "pytest>=7.0.0",
     "pytest-asyncio>=0.18.0",

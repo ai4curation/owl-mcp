@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import os
+import re
 import threading
 from collections.abc import Callable
 from pathlib import Path
@@ -221,11 +222,11 @@ class SimpleOwlAPI:
     def find_axioms(self, pattern: Optional[str], axiom_type: Optional[str] = None, 
                   include_labels: bool = False, annotation_property: Optional[str] = None) -> list[str]:
         """
-        Find axioms matching a pattern in the ontology.
+        Find axioms matching a regex pattern in the ontology.
 
         Args:
-            pattern: A string pattern to match against axiom strings
-                     (simple substring matching)
+            pattern: A regex pattern to match against axiom strings
+                     (supports full Python regex syntax, e.g., r"SubClassOf.*:Animal")
             axiom_type: Optional type of axiom to filter by (e.g., "ClassAssertion")
             include_labels: If True, add human-readable labels after '##' in the output
             annotation_property: Optional annotation property IRI to use for labels
@@ -233,16 +234,27 @@ class SimpleOwlAPI:
 
         Returns:
             List of matching axiom strings, optionally with human-readable labels
+            
+        Raises:
+            re.error: If the regex pattern is invalid
         """
         with self.lock:
             axioms = self.get_all_axiom_strings(include_labels=False)  # Get raw axioms first
             matching_axioms = []
 
+            # Compile regex pattern if provided
+            regex_pattern = None
+            if pattern:
+                try:
+                    regex_pattern = re.compile(pattern)
+                except re.error as e:
+                    raise re.error(f"Invalid regex pattern '{pattern}': {e}") from e
+
             for axiom in axioms:
                 if axiom_type and not axiom.startswith(axiom_type + "("):
                     continue
                 axiom_str = str(axiom)
-                if not pattern or pattern in axiom_str:
+                if not pattern or (regex_pattern and regex_pattern.search(axiom_str)):
                     matching_axioms.append(axiom_str)
             
             # If labels requested, add them to the matching axioms

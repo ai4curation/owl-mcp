@@ -44,3 +44,4 @@ nav:
   - Development:
       - Contributing: development/contributing.md
       - Architecture: development/architecture.md
+  - FAQ: faq.md
