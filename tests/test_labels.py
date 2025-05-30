@@ -20,20 +20,20 @@ def owl_api_with_labels():
 
     # Initialize API
     api = SimpleOwlAPI(temp_file.name)
-    
+
     # Add some classes with labels
     api.add_axiom("Declaration(Class(ex:Person))")
     api.add_axiom("Declaration(Class(ex:Animal))")
     api.add_axiom("Declaration(Class(ex:Dog))")
-    
+
     # Add labels to these classes
-    api.add_axiom("AnnotationAssertion(rdfs:label ex:Person \"Person\")")
-    api.add_axiom("AnnotationAssertion(rdfs:label ex:Animal \"Animal\")")
-    api.add_axiom("AnnotationAssertion(rdfs:label ex:Dog \"Dog\")")
-    
+    api.add_axiom('AnnotationAssertion(rdfs:label ex:Person "Person")')
+    api.add_axiom('AnnotationAssertion(rdfs:label ex:Animal "Animal")')
+    api.add_axiom('AnnotationAssertion(rdfs:label ex:Dog "Dog")')
+
     # Add a different annotation type
-    api.add_axiom("AnnotationAssertion(ex:definition ex:Person \"A human being\")")
-    
+    api.add_axiom('AnnotationAssertion(ex:definition ex:Person "A human being")')
+
     # Add a class axiom to test with labels
     api.add_axiom("SubClassOf(ex:Dog ex:Animal)")
 
@@ -54,7 +54,9 @@ def test_get_labels_for_iri(owl_api_with_labels):
     assert "Person" in labels
 
     # Test getting labels with specified annotation property
-    definitions = owl_api_with_labels.get_labels_for_iri("ex:Person", "http://example.org/definition")
+    definitions = owl_api_with_labels.get_labels_for_iri(
+        "ex:Person", "http://example.org/definition"
+    )
     assert len(definitions) == 1
     assert "A human being" in definitions
 
@@ -72,19 +74,22 @@ def test_get_axioms_with_labels(owl_api_with_labels):
     # Get all axioms without labels
     axioms = owl_api_with_labels.get_all_axiom_strings(include_labels=False)
     subclass_axiom = next(a for a in axioms if a.startswith("SubClassOf"))
-    
+
     # Verify no labels are included
     assert "##" not in subclass_axiom
-    
+
     # Get axioms with labels
     labeled_axioms = owl_api_with_labels.get_all_axiom_strings(include_labels=True)
     labeled_subclass_axiom = next(a for a in labeled_axioms if a.startswith("SubClassOf"))
-    
+
     # Verify labels are included
     assert "##" in labeled_subclass_axiom
     assert "Dog" in labeled_subclass_axiom
     assert "Animal" in labeled_subclass_axiom
-    assert 'SubClassOf(ex:Dog ex:Animal) ## ex:Dog = "Dog"; ex:Animal = "Animal"' == labeled_subclass_axiom
+    assert (
+        labeled_subclass_axiom
+        == 'SubClassOf(ex:Dog ex:Animal) ## ex:Dog = "Dog"; ex:Animal = "Animal"'
+    )
 
 
 def test_find_axioms_with_labels(owl_api_with_labels):
@@ -93,24 +98,22 @@ def test_find_axioms_with_labels(owl_api_with_labels):
     axioms = owl_api_with_labels.find_axioms("SubClassOf", include_labels=False)
     assert len(axioms) == 1
     assert "##" not in axioms[0]
-    
+
     # Find axioms with labels
     labeled_axioms = owl_api_with_labels.find_axioms("SubClassOf", include_labels=True)
     assert len(labeled_axioms) == 1
     assert "##" in labeled_axioms[0]
     assert "Dog" in labeled_axioms[0]
     assert "Animal" in labeled_axioms[0]
-    
-    # Find with specific annotation property 
+
+    # Find with specific annotation property
     custom_labeled_axioms = owl_api_with_labels.find_axioms(
-        "SubClassOf", 
-        include_labels=True,
-        annotation_property="http://example.org/definition"
+        "SubClassOf", include_labels=True, annotation_property="http://example.org/definition"
     )
-    
+
     # Should include the axiom (which has Dog and Animal terms since they're part of the axiom)
     assert len(custom_labeled_axioms) == 1
-    
-    # Here we're checking if labels with "=" symbol are NOT included, 
+
+    # Here we're checking if labels with "=" symbol are NOT included,
     # since our custom property doesn't have values
     assert "=" not in custom_labeled_axioms[0]

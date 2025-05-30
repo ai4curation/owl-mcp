@@ -7,14 +7,12 @@ the OWL Server functionality, allowing integration with other MCP systems.
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel
-from pyhornedowl.model import OntologyAnnotation
 
-from owl_mcp.axiom_parser import serialize_axioms
-from owl_mcp.config import OntologyConfig, get_config_manager, OWLMCPConfig
+from owl_mcp.config import OWLMCPConfig, get_config_manager
 from owl_mcp.owl_api import SimpleOwlAPI
 
 # Initialize FastMCP server
@@ -56,10 +54,14 @@ def ask_for_axioms_about_prompt(topic: str) -> str:
     """Generates a user message asking for axioms matching a string."""
     return f"What axioms include the string '{topic}'?"
 
+
 @mcp.prompt()
 def add_subclass_of_prompt(child: str, parent: str) -> str:
     """Generates a user message asking to add a subclass of axiom."""
-    return f"Add a subClassOf axiom where the subclass is '{child}' and the superclass is '{parent}'"
+    return (
+        f"Add a subClassOf axiom where the subclass is '{child}' and the superclass is '{parent}'"
+    )
+
 
 # Dictionary to cache SimpleOwlAPI instances
 _api_instances = {}
@@ -83,19 +85,19 @@ def _get_api_instance(owl_file_path: str, auto_register: bool = False) -> Simple
         # Check if we have configuration for this file
         config_manager = get_config_manager()
         ontology_config = config_manager.get_ontology_by_path(owl_file_path)
-        
+
         if ontology_config:
             # Use configured settings
             _api_instances[owl_file_path] = SimpleOwlAPI(
                 owl_file_path,
                 serialization=ontology_config.preferred_serialization,
                 readonly=ontology_config.readonly,
-                annotation_property=ontology_config.annotation_property
+                annotation_property=ontology_config.annotation_property,
             )
         else:
             # Use default settings
             _api_instances[owl_file_path] = SimpleOwlAPI(owl_file_path)
-            
+
             # Auto-register if requested
             if auto_register:
                 _api_instances[owl_file_path].register_in_config()
@@ -123,8 +125,9 @@ async def add_axiom(owl_file_path: str, axiom_str: str) -> str:
         return f"Successfully added axiom: {axiom_str}"
     return f"Failed to add axiom: {axiom_str}"
 
+
 @mcp.tool()
-async def add_axioms(owl_file_path: str, axiom_strs: List[str]) -> str:
+async def add_axioms(owl_file_path: str, axiom_strs: list[str]) -> str:
     """
     Adds a list of axioms to the ontology, using OWL functional syntax.
 
@@ -167,39 +170,45 @@ async def remove_axiom(owl_file_path: str, axiom_str: str) -> str:
 
 @mcp.tool()
 async def find_axioms(
-    owl_file_path: str, 
-    pattern: str, 
-    limit=100, 
+    owl_file_path: str,
+    pattern: str,
+    limit=100,
     include_labels: bool = False,
-    annotation_property: Optional[str] = None
+    annotation_property: Optional[str] = None,
 ) -> list[str]:
     """
     Find axioms matching a pattern in the ontology.
 
     Args:
         owl_file_path: Absolute path to the OWL file
-        pattern: A string pattern to match against axiom strings
-                (simple substring matching)
+        pattern: A substring or regex pattern to match against axiom strings
+                 (supports full Python regex syntax, e.g., r"SubClassOf.*:Animal")
         limit: (int) Maximum number of axioms to return (default: 100)
         include_labels: If True, include human-readable labels after ## in the output
-        annotation_property: Optional annotation property IRI to use for labels 
+        annotation_property: Optional annotation property IRI to use for labels
                             (defaults to rdfs:label)
 
     Returns:
         list[str]: List of matching axiom strings
     """
     api = _get_api_instance(owl_file_path)
-    return api.find_axioms(pattern, 
-                         include_labels=include_labels, 
-                         annotation_property=annotation_property)[0:limit]
+    if isinstance(limit, str):
+        # dumb AI may keep trying this with strings
+        if limit:
+            limit = int(limit)
+        else:
+            limit = 100
+    return api.find_axioms(
+        pattern, include_labels=include_labels, annotation_property=annotation_property
+    )[0:limit]
 
 
 @mcp.tool()
 async def get_all_axioms(
-    owl_file_path: str, 
-    limit=100, 
+    owl_file_path: str,
+    limit=100,
     include_labels: bool = False,
-    annotation_property: Optional[str] = None
+    annotation_property: Optional[str] = None,
 ) -> list[str]:
     """
     Get all axioms in the ontology as strings.
@@ -208,7 +217,7 @@ async def get_all_axioms(
         owl_file_path: Absolute path to the OWL file
         limit: Maximum number of axioms to return (default: 100)
         include_labels: If True, include human-readable labels after ## in the output
-        annotation_property: Optional annotation property IRI to use for labels 
+        annotation_property: Optional annotation property IRI to use for labels
                             (defaults to rdfs:label)
 
     Returns:
@@ -216,8 +225,7 @@ async def get_all_axioms(
     """
     api = _get_api_instance(owl_file_path)
     return api.get_all_axiom_strings(
-        include_labels=include_labels, 
-        annotation_property=annotation_property
+        include_labels=include_labels, annotation_property=annotation_property
     )[0:limit]
 
 
@@ -261,6 +269,7 @@ async def ontology_metadata(owl_file_path: str) -> list[str]:
 
 # Configuration resources
 
+
 @mcp.resource("resource://config/ontologies")
 async def get_config_ontologies() -> OWLMCPConfig:
     """
@@ -271,7 +280,6 @@ async def get_config_ontologies() -> OWLMCPConfig:
     """
     config_manager = get_config_manager()
     return config_manager.config
-
 
 
 @mcp.resource("resource://active")
@@ -297,11 +305,13 @@ async def stop_owl_service(owl_file_path: str) -> str:
 
 # Configuration tools
 
+
 class OntologyConfigInfo(BaseModel):
     """Simplified model for OntologyConfig that can be passed through MCP."""
+
     name: str
     path: str
-    metadata_axioms: List[str]
+    metadata_axioms: list[str]
     readonly: bool
     description: Optional[str] = None
     preferred_serialization: Optional[str] = None
@@ -309,28 +319,30 @@ class OntologyConfigInfo(BaseModel):
 
 
 @mcp.tool()
-async def list_configured_ontologies() -> List[OntologyConfigInfo]:
+async def list_configured_ontologies() -> list[OntologyConfigInfo]:
     """
     List all ontologies defined in the configuration.
-    
+
     Returns:
         List[OntologyConfigInfo]: List of configured ontologies
     """
     config_manager = get_config_manager()
     ontologies = config_manager.list_ontologies()
-    
+
     result = []
     for name, config in ontologies.items():
-        result.append(OntologyConfigInfo(
-            name=name,
-            path=config.path,
-            metadata_axioms=config.metadata_axioms,
-            readonly=config.readonly,
-            description=config.description,
-            preferred_serialization=config.preferred_serialization,
-            annotation_property=config.annotation_property
-        ))
-    
+        result.append(
+            OntologyConfigInfo(
+                name=name,
+                path=config.path,
+                metadata_axioms=config.metadata_axioms,
+                readonly=config.readonly,
+                description=config.description,
+                preferred_serialization=config.preferred_serialization,
+                annotation_property=config.annotation_property,
+            )
+        )
+
     return result
 
 
@@ -338,15 +350,15 @@ async def list_configured_ontologies() -> List[OntologyConfigInfo]:
 async def configure_ontology(
     name: str,
     path: str,
-    metadata_axioms: Optional[List[str]] = None,
+    metadata_axioms: Optional[list[str]] = None,
     readonly: bool = False,
     description: Optional[str] = None,
     preferred_serialization: Optional[str] = None,
-    annotation_property: Optional[str] = None
+    annotation_property: Optional[str] = None,
 ) -> str:
     """
     Add or update an ontology in the configuration.
-    
+
     Args:
         name: A unique name for the ontology
         path: Absolute path to the ontology file
@@ -355,12 +367,12 @@ async def configure_ontology(
         description: Optional description
         preferred_serialization: Optional preferred serialization format
         annotation_property: Optional annotation property IRI for labels (default: rdfs:label)
-    
+
     Returns:
         str: Success or error message
     """
     config_manager = get_config_manager()
-    
+
     # Check if the ontology is already loaded
     path = os.path.abspath(path)
     if path in _api_instances:
@@ -368,7 +380,7 @@ async def configure_ontology(
         api = _api_instances[path]
         api.stop()
         del _api_instances[path]
-    
+
     # Add to configuration
     config_manager.add_ontology(
         name=name,
@@ -377,13 +389,13 @@ async def configure_ontology(
         readonly=readonly,
         description=description,
         preferred_serialization=preferred_serialization,
-        annotation_property=annotation_property
+        annotation_property=annotation_property,
     )
-    
+
     # Try to verify the file exists
     if not os.path.exists(path):
         return f"Configured ontology '{name}' at {path}, but file does not exist yet."
-    
+
     return f"Successfully configured ontology '{name}' at {path}"
 
 
@@ -391,25 +403,25 @@ async def configure_ontology(
 async def remove_ontology_config(name: str) -> str:
     """
     Remove an ontology from the configuration.
-    
+
     Args:
         name: Name of the ontology to remove
-    
+
     Returns:
         str: Success or error message
     """
     config_manager = get_config_manager()
     ontology_config = config_manager.get_ontology(name)
-    
+
     if not ontology_config:
         return f"No ontology with name '{name}' found in configuration."
-    
+
     # Check if the ontology is currently loaded
     path = os.path.abspath(ontology_config.path)
     if path in _api_instances:
         # Stop the service
         await stop_owl_service(path)
-    
+
     # Remove from configuration
     config_manager.remove_ontology(name)
     return f"Successfully removed ontology '{name}' from configuration."
@@ -419,19 +431,19 @@ async def remove_ontology_config(name: str) -> str:
 async def get_ontology_config(name: str) -> Optional[OntologyConfigInfo]:
     """
     Get configuration for a specific ontology.
-    
+
     Args:
         name: Name of the ontology
-    
+
     Returns:
         Optional[OntologyConfigInfo]: The ontology configuration or None if not found
     """
     config_manager = get_config_manager()
     config = config_manager.get_ontology(name)
-    
+
     if not config:
         return None
-        
+
     return OntologyConfigInfo(
         name=name,
         path=config.path,
@@ -439,7 +451,7 @@ async def get_ontology_config(name: str) -> Optional[OntologyConfigInfo]:
         readonly=config.readonly,
         description=config.description,
         preferred_serialization=config.preferred_serialization,
-        annotation_property=config.annotation_property
+        annotation_property=config.annotation_property,
     )
 
 
@@ -450,14 +462,14 @@ async def register_ontology_in_config(
     readonly: Optional[bool] = None,
     description: Optional[str] = None,
     preferred_serialization: Optional[str] = None,
-    annotation_property: Optional[str] = None
+    annotation_property: Optional[str] = None,
 ) -> str:
     """
     Register an existing ontology in the configuration system.
-    
+
     This allows you to save preferences and metadata for frequently used ontologies,
     making them accessible by name in future sessions.
-    
+
     Args:
         owl_file_path: Absolute path to the ontology file
         name: Optional custom name for the ontology (defaults to filename without extension)
@@ -465,22 +477,22 @@ async def register_ontology_in_config(
         description: Optional description for the ontology
         preferred_serialization: Optional preferred serialization format
         annotation_property: Optional annotation property IRI for labels (defaults to current setting if loaded)
-    
+
     Returns:
         str: Name of the registered ontology
     """
     # Get or create the API instance
     api = _get_api_instance(owl_file_path)
-    
+
     # Register in configuration
     registered_name = api.register_in_config(
         name=name,
         readonly=readonly,
         description=description,
         preferred_serialization=preferred_serialization,
-        annotation_property=annotation_property
+        annotation_property=annotation_property,
     )
-    
+
     return f"Successfully registered ontology '{registered_name}' in configuration"
 
 
@@ -492,12 +504,12 @@ async def load_and_register_ontology(
     create_if_not_exists: bool = True,
     description: Optional[str] = None,
     preferred_serialization: Optional[str] = None,
-    metadata_axioms: Optional[List[str]] = None,
-    annotation_property: Optional[str] = None
+    metadata_axioms: Optional[list[str]] = None,
+    annotation_property: Optional[str] = None,
 ) -> str:
     """
     Load an ontology and register it in the configuration system in one step.
-    
+
     Args:
         owl_file_path: Absolute path to the ontology file
         name: Optional name for the ontology (defaults to filename stem)
@@ -507,66 +519,67 @@ async def load_and_register_ontology(
         preferred_serialization: Optional preferred serialization format
         metadata_axioms: Optional list of metadata axioms to add to the ontology
         annotation_property: Optional annotation property IRI for labels (default: rdfs:label)
-        
+
     Returns:
         str: Success message
     """
     # Convert to absolute path
     owl_file_path = os.path.abspath(owl_file_path)
-    
+
     # Check if the ontology is already registered
     config_manager = get_config_manager()
-    
+
     # If name is not provided, derive it from the filename
     if name is None:
         name = Path(owl_file_path).stem
-    
+
     # Check if we need to create the file
     file_exists = os.path.exists(owl_file_path)
     if not file_exists and not create_if_not_exists:
         return f"File does not exist: {owl_file_path}"
-    
+
     # Get or create an API instance (don't auto-register yet)
     api = _get_api_instance(owl_file_path)
-    
+
     # Add metadata axioms if provided
     if metadata_axioms:
         for axiom in metadata_axioms:
             api.add_axiom(axiom, bypass_readonly=True)
-    
+
     # Register in configuration
     api.register_in_config(
         name=name,
         readonly=readonly,
         description=description,
         preferred_serialization=preferred_serialization,
-        annotation_property=annotation_property
+        annotation_property=annotation_property,
     )
-    
+
     # Determine if the file was created or opened
     action = "Created and registered" if not file_exists else "Loaded and registered"
-    
+
     return f"{action} ontology '{name}' at {owl_file_path}"
 
 
 # Tools to work with configured ontologies by name
 
+
 def _get_ontology_path_by_name(name: str) -> Optional[str]:
     """
     Helper function to get the path for a configured ontology by name.
-    
+
     Args:
         name: Name of the ontology in the configuration
-        
+
     Returns:
         Optional[str]: Path to the ontology file or None if not found
     """
     config_manager = get_config_manager()
     config = config_manager.get_ontology(name)
-    
+
     if not config:
         return None
-        
+
     return config.path
 
 
@@ -574,18 +587,18 @@ def _get_ontology_path_by_name(name: str) -> Optional[str]:
 async def add_axiom_by_name(ontology_name: str, axiom_str: str) -> str:
     """
     Add an axiom to a configured ontology using its name.
-    
+
     Args:
         ontology_name: Name of the ontology as defined in configuration
         axiom_str: String representation of the axiom in OWL functional syntax
-    
+
     Returns:
         str: Success message or error
     """
     owl_file_path = _get_ontology_path_by_name(ontology_name)
     if not owl_file_path:
         return f"No ontology with name '{ontology_name}' found in configuration."
-        
+
     return await add_axiom(owl_file_path, axiom_str)
 
 
@@ -593,53 +606,53 @@ async def add_axiom_by_name(ontology_name: str, axiom_str: str) -> str:
 async def remove_axiom_by_name(ontology_name: str, axiom_str: str) -> str:
     """
     Remove an axiom from a configured ontology using its name.
-    
+
     Args:
         ontology_name: Name of the ontology as defined in configuration
         axiom_str: String representation of the axiom in OWL functional syntax
-    
+
     Returns:
         str: Success message or error
     """
     owl_file_path = _get_ontology_path_by_name(ontology_name)
     if not owl_file_path:
         return f"No ontology with name '{ontology_name}' found in configuration."
-        
+
     return await remove_axiom(owl_file_path, axiom_str)
 
 
 @mcp.tool()
 async def find_axioms_by_name(
-    ontology_name: str, 
-    pattern: str, 
-    limit=100, 
+    ontology_name: str,
+    pattern: str,
+    limit=100,
     include_labels: bool = False,
-    annotation_property: Optional[str] = None
+    annotation_property: Optional[str] = None,
 ) -> list[str]:
     """
     Find axioms matching a pattern in a configured ontology using its name.
-    
+
     Args:
         ontology_name: Name of the ontology as defined in configuration
         pattern: A string pattern to match against axiom strings
         limit: Maximum number of axioms to return (default: 100)
         include_labels: If True, include human-readable labels after ## in the output
-        annotation_property: Optional annotation property IRI to use for labels 
+        annotation_property: Optional annotation property IRI to use for labels
                             (defaults to rdfs:label)
-    
+
     Returns:
         list[str]: List of matching axiom strings or empty list if ontology not found
     """
     owl_file_path = _get_ontology_path_by_name(ontology_name)
     if not owl_file_path:
         return []
-        
+
     return await find_axioms(
-        owl_file_path, 
-        pattern, 
-        limit, 
+        owl_file_path,
+        pattern,
+        limit,
         include_labels=include_labels,
-        annotation_property=annotation_property
+        annotation_property=annotation_property,
     )
 
 
@@ -647,37 +660,35 @@ async def find_axioms_by_name(
 async def add_prefix_by_name(ontology_name: str, prefix: str, uri: str) -> str:
     """
     Add a prefix mapping to a configured ontology using its name.
-    
+
     Args:
         ontology_name: Name of the ontology as defined in configuration
         prefix: The prefix string (e.g., "ex:")
         uri: The URI the prefix maps to (e.g., "http://example.org/")
-    
+
     Returns:
         str: Success message or error
     """
     owl_file_path = _get_ontology_path_by_name(ontology_name)
     if not owl_file_path:
         return f"No ontology with name '{ontology_name}' found in configuration."
-        
+
     return await add_prefix(owl_file_path, prefix, uri)
 
 
 @mcp.tool()
 async def get_labels_for_iri(
-    owl_file_path: str, 
-    iri: str, 
-    annotation_property: Optional[str] = None
-) -> List[str]:
+    owl_file_path: str, iri: str, annotation_property: Optional[str] = None
+) -> list[str]:
     """
     Get all labels for a given IRI.
-    
+
     Args:
         owl_file_path: Absolute path to the OWL file
         iri: The IRI to get labels for (as a string)
         annotation_property: Optional annotation property IRI to use for labels
                             (defaults to rdfs:label if None)
-    
+
     Returns:
         List[str]: List of label strings
     """
@@ -687,26 +698,24 @@ async def get_labels_for_iri(
 
 @mcp.tool()
 async def get_labels_for_iri_by_name(
-    ontology_name: str, 
-    iri: str, 
-    annotation_property: Optional[str] = None
-) -> List[str]:
+    ontology_name: str, iri: str, annotation_property: Optional[str] = None
+) -> list[str]:
     """
     Get all labels for a given IRI in a configured ontology.
-    
+
     Args:
         ontology_name: Name of the ontology as defined in configuration
         iri: The IRI to get labels for (as a string)
         annotation_property: Optional annotation property IRI to use for labels
                             (defaults to rdfs:label if None)
-    
+
     Returns:
         List[str]: List of label strings or empty list if ontology not found
     """
     owl_file_path = _get_ontology_path_by_name(ontology_name)
     if not owl_file_path:
         return []
-        
+
     return await get_labels_for_iri(owl_file_path, iri, annotation_property)
 
 

@@ -5,7 +5,7 @@ import re
 import threading
 from collections.abc import Callable
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional
 
 import pyhornedowl
 from pyhornedowl.model import OntologyAnnotation
@@ -45,11 +45,11 @@ class SimpleOwlAPI:
             create_if_not_exists: If True, create the file if it doesn't exist
             serialization: Optional serialization format (e.g., "ofn", "rdfxml"). Inferred if not specified
             readonly: If True, changes to the ontology will not be saved to disk
-            annotation_property: Default annotation property IRI to use for labels 
+            annotation_property: Default annotation property IRI to use for labels
                                 (defaults to rdfs:label if None)
         """
         from .config import get_config_manager
-        
+
         self.owl_file_path = os.path.abspath(owl_file_path)
         self.ontology = None
         self.file_hash = None
@@ -57,14 +57,16 @@ class SimpleOwlAPI:
         self.file_monitor = None
         self.lock = threading.RLock()  # Reentrant lock for thread safety
         self.is_syncing = False  # Flag to prevent recursive sync
-        
+
         # Set default annotation property for labels (rdfs:label is the standard default)
-        self.annotation_property = annotation_property or "http://www.w3.org/2000/01/rdf-schema#label"
-        
+        self.annotation_property = (
+            annotation_property or "http://www.w3.org/2000/01/rdf-schema#label"
+        )
+
         # Check if we have a configuration for this ontology
         config_manager = get_config_manager()
         ontology_config = config_manager.get_ontology_by_path(self.owl_file_path)
-        
+
         if ontology_config:
             # Use the configured settings
             self.readonly = ontology_config.readonly if readonly is False else readonly
@@ -76,7 +78,7 @@ class SimpleOwlAPI:
             # Use the provided settings
             self.readonly = readonly
             self.serialization = serialization
-        
+
         # If serialization is still None, try to infer it
         if not self.serialization and owl_file_path.endswith(".owl"):
             # A suffix `.owl` can be any format;
@@ -90,7 +92,7 @@ class SimpleOwlAPI:
                             self.serialization = "ofn"
                         else:
                             self.serialization = "owl"
-        
+
         # If we have config metadata, prepare to add it
         self.pending_metadata_axioms = []
         if ontology_config and ontology_config.metadata_axioms:
@@ -98,7 +100,7 @@ class SimpleOwlAPI:
 
         # Try to load the ontology
         self.load_ontology(create_if_not_exists=create_if_not_exists)
-        
+
         # Add any configured metadata axioms
         if self.pending_metadata_axioms:
             for axiom_str in self.pending_metadata_axioms:
@@ -141,14 +143,14 @@ class SimpleOwlAPI:
     def save_ontology(self) -> None:
         """
         Save the ontology to the OWL file.
-        
+
         If the ontology is marked as readonly, the save operation is skipped.
         """
         with self.lock:
             if self.readonly:
                 logger.debug(f"Ontology {self.owl_file_path} is readonly, skipping save")
                 return
-                
+
             if self.ontology is not None:
                 try:
                     logger.debug(f"Saving ontology to {self.owl_file_path}")
@@ -175,7 +177,7 @@ class SimpleOwlAPI:
             if self.readonly and not bypass_readonly:
                 logger.warning(f"Cannot add axiom to readonly ontology: {self.owl_file_path}")
                 return False
-                
+
             # Parse the axiom string into a py-horned-owl axiom object
             components = parse_axiom_string(axiom_str, self.ontology)
 
@@ -183,11 +185,11 @@ class SimpleOwlAPI:
             for c in components:
                 print(f"ADDING {c} :: {c.component}")
                 self.ontology.add_component(c.component, c.ann)
-                
+
             # Save only if not readonly or explicitly bypassing readonly
             if not self.readonly or bypass_readonly:
                 self.save_ontology()
-                
+
             self._notify_observers("axiom_added", axiom_str=axiom_str)
             return True
 
@@ -206,21 +208,26 @@ class SimpleOwlAPI:
             if self.readonly and not bypass_readonly:
                 logger.warning(f"Cannot remove axiom from readonly ontology: {self.owl_file_path}")
                 return False
-                
+
             components = parse_axiom_string(axiom_str, self.ontology)
             for c in components:
                 # Remove the axiom from the ontology
                 self.ontology.remove_component(c.component)
-                
+
             # Save only if not readonly or explicitly bypassing readonly
             if not self.readonly or bypass_readonly:
                 self.save_ontology()
-                
+
             self._notify_observers("axiom_removed", axiom_str=axiom_str)
             return True
 
-    def find_axioms(self, pattern: Optional[str], axiom_type: Optional[str] = None, 
-                  include_labels: bool = False, annotation_property: Optional[str] = None) -> list[str]:
+    def find_axioms(
+        self,
+        pattern: Optional[str],
+        axiom_type: Optional[str] = None,
+        include_labels: bool = False,
+        annotation_property: Optional[str] = None,
+    ) -> list[str]:
         """
         Find axioms matching a regex pattern in the ontology.
 
@@ -234,7 +241,7 @@ class SimpleOwlAPI:
 
         Returns:
             List of matching axiom strings, optionally with human-readable labels
-            
+
         Raises:
             re.error: If the regex pattern is invalid
         """
@@ -256,68 +263,70 @@ class SimpleOwlAPI:
                 axiom_str = str(axiom)
                 if not pattern or (regex_pattern and regex_pattern.search(axiom_str)):
                     matching_axioms.append(axiom_str)
-            
+
             # If labels requested, add them to the matching axioms
             if include_labels and matching_axioms:
                 # Process each matching axiom to add labels
                 result = []
                 for axiom_str in matching_axioms:
                     enhanced_axiom = axiom_str
-                    
+
                     # Collect all IRIs from the axiom string - simple regex-like approach
                     start_idx = 0
                     found_labels = []
-                    
+
                     while True:
                         # Find the next IRI (with prefix like ex:Something)
-                        colon_idx = axiom_str.find(':', start_idx)
+                        colon_idx = axiom_str.find(":", start_idx)
                         if colon_idx == -1:
                             break
-                        
+
                         # We need to check if this is an actual CURIE and not just a colon
                         prefix_start = colon_idx
                         for i in range(colon_idx - 1, -1, -1):
-                            if axiom_str[i] in ' (,':
+                            if axiom_str[i] in " (,":
                                 prefix_start = i + 1
                                 break
-                        
+
                         if prefix_start < colon_idx:  # We have a potential prefix
                             prefix = axiom_str[prefix_start:colon_idx]
-                            
+
                             # Find the end of the IRI
                             end_idx = len(axiom_str)
-                            for char in ' ),':
+                            for char in " ),":
                                 pos = axiom_str.find(char, colon_idx + 1)
                                 if pos != -1 and pos < end_idx:
                                     end_idx = pos
-                            
+
                             if end_idx > colon_idx + 1:  # We have an actual IRI
                                 iri = axiom_str[prefix_start:end_idx]
-                                
+
                                 # Get labels for this IRI
                                 try:
                                     labels = self.get_labels_for_iri(iri, annotation_property)
                                     if labels:
-                                        found_labels.append(f"{iri} = \"{labels[0]}\"")
+                                        found_labels.append(f'{iri} = "{labels[0]}"')
                                 except Exception as e:
                                     logger.debug(f"Error getting label for IRI {iri}: {e}")
-                        
+
                         # Move to the next position
                         start_idx = colon_idx + 1
-                    
+
                     # Add all found labels to the axiom string
                     if found_labels:
                         enhanced_axiom = f"{enhanced_axiom} ## {'; '.join(found_labels)}"
-                        
+
                     result.append(enhanced_axiom)
                 return result
-            
+
             return matching_axioms
 
-    def get_all_axiom_strings(self, include_labels: bool = False, annotation_property: Optional[str] = None) -> list[str]:
+    def get_all_axiom_strings(
+        self, include_labels: bool = False, annotation_property: Optional[str] = None
+    ) -> list[str]:
         """
         Get all axioms in the ontology as strings.
-        
+
         Args:
             include_labels: If True, add human-readable labels after '##' in the output
             annotation_property: Optional annotation property IRI to use for labels
@@ -329,63 +338,63 @@ class SimpleOwlAPI:
         with self.lock:
             components = self.ontology.get_axioms()
             axiom_strings = serialize_axioms(components, self.ontology)
-            
+
             if not include_labels:
                 return axiom_strings
-                
+
             # Add human-readable labels when requested
             result = []
             for axiom_str in axiom_strings:
                 # Look for IRIs in the axiom
                 enhanced_axiom = axiom_str
-                
+
                 # Collect all IRIs from the axiom string - simple regex-like approach
                 start_idx = 0
                 found_labels = []
-                
+
                 while True:
                     # Find the next IRI (with prefix like ex:Something)
-                    colon_idx = axiom_str.find(':', start_idx)
+                    colon_idx = axiom_str.find(":", start_idx)
                     if colon_idx == -1:
                         break
-                    
+
                     # We need to check if this is an actual CURIE and not just a colon
                     prefix_start = colon_idx
                     for i in range(colon_idx - 1, -1, -1):
-                        if axiom_str[i] in ' (,':
+                        if axiom_str[i] in " (,":
                             prefix_start = i + 1
                             break
-                    
+
                     if prefix_start < colon_idx:  # We have a potential prefix
                         prefix = axiom_str[prefix_start:colon_idx]
-                        
+
                         # Find the end of the IRI
                         end_idx = len(axiom_str)
-                        for char in ' ),':
+                        for char in " ),":
                             pos = axiom_str.find(char, colon_idx + 1)
                             if pos != -1 and pos < end_idx:
                                 end_idx = pos
-                        
+
                         if end_idx > colon_idx + 1:  # We have an actual IRI
                             iri = axiom_str[prefix_start:end_idx]
-                            
+
                             # Get labels for this IRI
                             try:
                                 labels = self.get_labels_for_iri(iri, annotation_property)
                                 if labels:
-                                    found_labels.append(f"{iri} = \"{labels[0]}\"")
+                                    found_labels.append(f'{iri} = "{labels[0]}"')
                             except Exception as e:
                                 logger.debug(f"Error getting label for IRI {iri}: {e}")
-                    
+
                     # Move to the next position
                     start_idx = colon_idx + 1
-                
+
                 # Add all found labels to the axiom string
                 if found_labels:
                     enhanced_axiom = f"{enhanced_axiom} ## {'; '.join(found_labels)}"
-                    
+
                 result.append(enhanced_axiom)
-            
+
             return result
 
     def add_prefix(self, prefix: str, uri: str, bypass_readonly: bool = False) -> bool:
@@ -404,13 +413,13 @@ class SimpleOwlAPI:
             if self.readonly and not bypass_readonly:
                 logger.warning(f"Cannot add prefix to readonly ontology: {self.owl_file_path}")
                 return False
-                
+
             self.ontology.add_prefix_mapping(prefix, uri)
-            
+
             # Save only if not readonly or explicitly bypassing readonly
             if not self.readonly or bypass_readonly:
                 self.save_ontology()
-                
+
             self._notify_observers("prefix_added", prefix=prefix, uri=uri)
             return True
 
@@ -422,45 +431,55 @@ class SimpleOwlAPI:
             List of ontology annotations
         """
         with self.lock:
-            oas = [a for a in self.ontology.get_components() if isinstance(a.component, OntologyAnnotation)]
+            oas = [
+                a
+                for a in self.ontology.get_components()
+                if isinstance(a.component, OntologyAnnotation)
+            ]
             return serialize_axioms(oas, self.ontology)
-            
-    def register_in_config(self, 
-                          name: Optional[str] = None, 
-                          readonly: Optional[bool] = None,
-                          description: Optional[str] = None,
-                          preferred_serialization: Optional[str] = None,
-                          annotation_property: Optional[str] = None) -> str:
+
+    def register_in_config(
+        self,
+        name: Optional[str] = None,
+        readonly: Optional[bool] = None,
+        description: Optional[str] = None,
+        preferred_serialization: Optional[str] = None,
+        annotation_property: Optional[str] = None,
+    ) -> str:
         """
         Register the current ontology in the configuration system.
-        
+
         Args:
             name: Optional name for the ontology (defaults to filename stem)
             readonly: Whether the ontology should be read-only (defaults to current setting)
             description: Optional description for the ontology
             preferred_serialization: Optional preferred serialization format (defaults to current setting)
             annotation_property: Optional annotation property IRI for labels (defaults to current setting)
-            
+
         Returns:
             str: Name of the registered ontology
         """
         from .config import get_config_manager
-        
+
         # Get or create a config manager
         config_manager = get_config_manager()
-        
+
         # If name is not provided, use the filename stem (without extension)
         if name is None:
             name = Path(self.owl_file_path).stem
-            
+
         # Extract metadata axioms from the ontology
         metadata_axioms = self.ontology_annotations()
-        
+
         # Use current values as defaults if not explicitly provided
         readonly_value = self.readonly if readonly is None else readonly
-        serialization_value = self.serialization if preferred_serialization is None else preferred_serialization
-        annotation_property_value = self.annotation_property if annotation_property is None else annotation_property
-        
+        serialization_value = (
+            self.serialization if preferred_serialization is None else preferred_serialization
+        )
+        annotation_property_value = (
+            self.annotation_property if annotation_property is None else annotation_property
+        )
+
         # Register in configuration
         config_manager.add_ontology(
             name=name,
@@ -469,9 +488,9 @@ class SimpleOwlAPI:
             readonly=readonly_value,
             description=description,
             preferred_serialization=serialization_value,
-            annotation_property=annotation_property_value
+            annotation_property=annotation_property_value,
         )
-        
+
         return name
 
     def sync_with_file(self) -> None:
@@ -512,23 +531,23 @@ class SimpleOwlAPI:
         """
         if callback in self.observers:
             self.observers.remove(callback)
-            
-    def get_labels_for_iri(self, iri: str, annotation_property: Optional[str] = None) -> List[str]:
+
+    def get_labels_for_iri(self, iri: str, annotation_property: Optional[str] = None) -> list[str]:
         """
         Get all labels for a given IRI using a specified annotation property.
-        
+
         Args:
             iri: The IRI to get labels for (as a string)
-            annotation_property: Optional annotation property IRI to use for labels 
+            annotation_property: Optional annotation property IRI to use for labels
                                 (defaults to the instance's annotation_property if None)
-                                
+
         Returns:
             List of label strings
         """
         with self.lock:
             # Use the instance's annotation_property field as default
             label_property = annotation_property or self.annotation_property
-            
+
             # Check if iri is a CURIE (e.g. "ex:Person") and handle appropriately
             if ":" in iri and not (iri.startswith("http://") or iri.startswith("https://")):
                 # This is a prefixed IRI, we need to get the full IRI
@@ -543,11 +562,11 @@ class SimpleOwlAPI:
             else:
                 # Already a full IRI
                 full_iri = iri
-                
+
             # Get all annotations for this IRI with the specified property
             try:
                 labels = self.ontology.get_annotations(full_iri, label_property)
-                
+
                 # Return the string values of the annotations
                 return labels if labels else []
             except Exception as e:

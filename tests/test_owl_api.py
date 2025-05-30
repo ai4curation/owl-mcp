@@ -144,7 +144,7 @@ def test_find_axioms_regex(owl_api):
         "ClassAssertion(ex:Animal ex:Dog)",
         "SubClassOf(ex:Dog ex:Animal)",
         "ObjectPropertyAssertion(ex:owns ex:John ex:Dog)",
-        "DataPropertyAssertion(ex:age ex:John \"25\"^^xsd:int)",
+        'DataPropertyAssertion(ex:age ex:John "25"^^xsd:int)',
     ]
     for axiom in axioms:
         owl_api.add_axiom(axiom)
@@ -153,20 +153,20 @@ def test_find_axioms_regex(owl_api):
     # Find all ClassAssertion or SubClassOf axioms
     found = owl_api.find_axioms(r"^(ClassAssertion|SubClassOf)")
     assert len(found) == 3
-    
+
     # Find axioms containing either "John" or "Dog"
     found = owl_api.find_axioms(r":(John|Dog)")
     assert len(found) == 5  # All axioms contain either John or Dog
-    
+
     # Find axioms ending with specific patterns
     found = owl_api.find_axioms(r"ex:Dog\)$")
     assert len(found) == 2  # ClassAssertion and ObjectPropertyAssertion
-    
+
     # Find data property assertions with integer values
     found = owl_api.find_axioms(r'"\d+".*xsd:int')
     assert len(found) == 1
     assert axioms[4] in found
-    
+
     # Test case-insensitive matching
     found = owl_api.find_axioms(r"(?i)person")
     assert len(found) == 1
@@ -177,7 +177,7 @@ def test_find_axioms_invalid_regex(owl_api):
     """Test that invalid regex patterns raise an error."""
     # Add a test axiom
     owl_api.add_axiom("ClassAssertion(ex:Person ex:John)")
-    
+
     # Test invalid regex
     with pytest.raises(re.error):
         owl_api.find_axioms("[invalid_regex")

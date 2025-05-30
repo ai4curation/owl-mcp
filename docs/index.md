@@ -29,10 +29,15 @@ You can either install directly from this link:
 
  This video shows how to do this manually:
 
- <video src="images/goose-config-mcp.mov" width=500 controls>
-  Your browser does not support the video tag.
-</video>
-
+<iframe 
+  width="500" 
+  height="560" 
+  src="https://www.youtube.com/embed/509qVPEbv0Q" 
+  title="YouTube video player" 
+  frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  allowfullscreen>
+</iframe>
  
 ### Try it out
 

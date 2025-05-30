@@ -1,10 +1,11 @@
 import shutil
 
 import pytest
-from pyhornedowl.model import OntologyAnnotation
 
 from owl_mcp.owl_api import SimpleOwlAPI
 from tests import INPUT_DIR, OUTPUT_DIR
+
+EXPECTED_MIN_ONTOLOGY_ANNOTATIONS = 3
 
 
 @pytest.fixture
@@ -31,13 +32,21 @@ def owl_api():
     # Cleanup
     api.stop()
 
+
 def test_ontology_metadata(owl_api):
     """Test fetching ontology metadata."""
-    assert len(owl_api.ontology_annotations()) > 3
+    assert len(owl_api.ontology_annotations()) > EXPECTED_MIN_ONTOLOGY_ANNOTATIONS
     for a in owl_api.ontology_annotations():
         print(a)
-    assert 'Annotation(<http://purl.org/dc/terms/title> "OBO Relations Ontology"@en)' in owl_api.get_all_axiom_strings()
-    assert 'Annotation(<http://purl.org/dc/terms/title> "OBO Relations Ontology"@en)' in owl_api.ontology_annotations()
+    assert (
+        'Annotation(<http://purl.org/dc/terms/title> "OBO Relations Ontology"@en)'
+        in owl_api.get_all_axiom_strings()
+    )
+    assert (
+        'Annotation(<http://purl.org/dc/terms/title> "OBO Relations Ontology"@en)'
+        in owl_api.ontology_annotations()
+    )
+
 
 def test_api(owl_api):
     """Test adding an axiom."""
