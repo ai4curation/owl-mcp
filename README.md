@@ -29,30 +29,18 @@ You can either install directly from this link:
 
  This video shows how to do this manually:
 
-<iframe 
-  width="500" 
-  height="560" 
-  src="https://www.youtube.com/embed/509qVPEbv0Q" 
-  title="YouTube video player" 
-  frameborder="0" 
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-  allowfullscreen>
-</iframe>
+ [![configuration](https://img.youtube.com/vi/509qVPEbv0Q/0.jpg)](https://www.youtube.com/watch?v=509qVPEbv0Q)
+
+
  
 ### Try it out
 
 You can ask to create an ontology, and add axioms to an ontology:
 
-<iframe 
-  width="500" 
-  height="560" 
-  src="https://www.youtube.com/embed/sAXs3djX854" 
-  title="YouTube video player" 
-  frameborder="0" 
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-  allowfullscreen>
-</iframe>
- 
+[![editing](https://img.youtube.com/vi/sAXs3djX854/0.jpg)](https://www.youtube.com/watch?v=sAXs3djX854)
+
+
+
 
 ## How this works
 
