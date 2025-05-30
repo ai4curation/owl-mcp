@@ -255,7 +255,8 @@ class SimpleOwlAPI:
                 try:
                     regex_pattern = re.compile(pattern)
                 except re.error as e:
-                    raise re.error(f"Invalid regex pattern '{pattern}': {e}") from e
+                    msg = f"Invalid regex pattern '{pattern}': {e}"
+                    raise re.error(msg) from e
 
             for axiom in axioms:
                 if axiom_type and not axiom.startswith(axiom_type + "("):
@@ -289,7 +290,7 @@ class SimpleOwlAPI:
                                 break
 
                         if prefix_start < colon_idx:  # We have a potential prefix
-                            prefix = axiom_str[prefix_start:colon_idx]
+                            _ = axiom_str[prefix_start:colon_idx]  # prefix var not used
 
                             # Find the end of the IRI
                             end_idx = len(axiom_str)
@@ -366,7 +367,7 @@ class SimpleOwlAPI:
                             break
 
                     if prefix_start < colon_idx:  # We have a potential prefix
-                        prefix = axiom_str[prefix_start:colon_idx]
+                        _ = axiom_str[prefix_start:colon_idx]  # prefix var not used
 
                         # Find the end of the IRI
                         end_idx = len(axiom_str)
@@ -549,7 +550,7 @@ class SimpleOwlAPI:
             label_property = annotation_property or self.annotation_property
 
             # Check if iri is a CURIE (e.g. "ex:Person") and handle appropriately
-            if ":" in iri and not (iri.startswith("http://") or iri.startswith("https://")):
+            if ":" in iri and not iri.startswith(("http://", "https://")):
                 # This is a prefixed IRI, we need to get the full IRI
                 prefix, local = iri.split(":", 1)
                 # Get all prefixes to find the right one
@@ -566,12 +567,12 @@ class SimpleOwlAPI:
             # Get all annotations for this IRI with the specified property
             try:
                 labels = self.ontology.get_annotations(full_iri, label_property)
-
-                # Return the string values of the annotations
-                return labels if labels else []
             except Exception as e:
                 logger.debug(f"Error getting labels for IRI {iri}: {e}")
                 return []
+            else:
+                # Return the string values of the annotations
+                return labels if labels else []
 
     def stop(self) -> None:
         """

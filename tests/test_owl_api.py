@@ -151,25 +151,30 @@ def test_find_axioms_regex(owl_api):
 
     # Test regex patterns
     # Find all ClassAssertion or SubClassOf axioms
+    expected_class_or_subclass = 3
     found = owl_api.find_axioms(r"^(ClassAssertion|SubClassOf)")
-    assert len(found) == 3
+    assert len(found) == expected_class_or_subclass
 
     # Find axioms containing either "John" or "Dog"
+    expected_john_or_dog = 5  # All axioms contain either John or Dog
     found = owl_api.find_axioms(r":(John|Dog)")
-    assert len(found) == 5  # All axioms contain either John or Dog
+    assert len(found) == expected_john_or_dog
 
     # Find axioms ending with specific patterns
+    expected_ending_with_dog = 2  # ClassAssertion and ObjectPropertyAssertion
     found = owl_api.find_axioms(r"ex:Dog\)$")
-    assert len(found) == 2  # ClassAssertion and ObjectPropertyAssertion
+    assert len(found) == expected_ending_with_dog
 
     # Find data property assertions with integer values
+    expected_integer_property = 1
     found = owl_api.find_axioms(r'"\d+".*xsd:int')
-    assert len(found) == 1
+    assert len(found) == expected_integer_property
     assert axioms[4] in found
 
     # Test case-insensitive matching
+    expected_case_insensitive_person = 1
     found = owl_api.find_axioms(r"(?i)person")
-    assert len(found) == 1
+    assert len(found) == expected_case_insensitive_person
     assert axioms[0] in found
 
 
