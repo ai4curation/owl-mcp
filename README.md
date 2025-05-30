@@ -1,8 +1,9 @@
 # OWL-MCP
 
-OWL-MCP is a Model-Context-Protocol (MCP) server for working with Web Ontology Language (OWL) ontologies. The goal is to allow for maintenance of ontologies as a part of AI chat sessions.
+OWL-MCP is a Model-Context-Protocol (MCP) server for working with Web Ontology Language (OWL) ontologies. 
 
-![img](https://avatars.githubusercontent.com/u/4671070?v=4) ![img](https://avatars.githubusercontent.com/u/182288589?s=200&v=4)
+![img](https://avatars.githubusercontent.com/u/182288589?s=200&v=4)
+![img](https://avatars.githubusercontent.com/u/4671070?s=200&v=4) 
 
 ## Quick Start
 
@@ -26,13 +27,32 @@ You can either install directly from this link:
 
  `uvx owl-mcp`
 
- ![img](docs/images/goose-install-extension.png)
+ This video shows how to do this manually:
 
- ### Try it out
+<iframe 
+  width="500" 
+  height="560" 
+  src="https://www.youtube.com/embed/509qVPEbv0Q" 
+  title="YouTube video player" 
+  frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  allowfullscreen>
+</iframe>
+ 
+### Try it out
 
-You can ask to create an ontology, or add axioms to an ontology:
+You can ask to create an ontology, and add axioms to an ontology:
 
- ![img](docs/images/goose-example.png)
+<iframe 
+  width="500" 
+  height="560" 
+  src="https://www.youtube.com/embed/sAXs3djX854" 
+  title="YouTube video player" 
+  frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  allowfullscreen>
+</iframe>
+ 
 
 ## How this works
 
