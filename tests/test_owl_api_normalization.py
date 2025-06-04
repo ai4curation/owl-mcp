@@ -13,7 +13,6 @@ test_output_dir = OUTPUT_DIR / "normalize-test"
 
 @pytest.fixture
 def owl_api():
-    
     # copy recursively from test_input_dir to test_output_dir, after first removing the test_output_dir
     if test_output_dir.exists():
         shutil.rmtree(test_output_dir)
@@ -46,14 +45,8 @@ def test_ontology_metadata(owl_api):
     assert len(owl_api.ontology_annotations()) > EXPECTED_MIN_ONTOLOGY_ANNOTATIONS
     for a in owl_api.ontology_annotations():
         print(a)
-    assert (
-        'Annotation(terms:title "OBO Relations Ontology"@en)'
-        in owl_api.get_all_axiom_strings()
-    )
-    assert (
-        'Annotation(terms:title "OBO Relations Ontology"@en)'
-        in owl_api.ontology_annotations()
-    )
+    assert 'Annotation(terms:title "OBO Relations Ontology"@en)' in owl_api.get_all_axiom_strings()
+    assert 'Annotation(terms:title "OBO Relations Ontology"@en)' in owl_api.ontology_annotations()
 
 
 def test_api(owl_api):
@@ -64,7 +57,6 @@ def test_api(owl_api):
     """Test adding an axiom."""
     axiom = "SubObjectPropertyOf(obo:RO_1 obo:RO_2)"
     owl_api.add_axiom(axiom)
-
 
     # Verify axiom was added to in-memory representation
     axioms = owl_api.get_all_axiom_strings()
@@ -78,5 +70,3 @@ def test_api(owl_api):
     owl_api.remove_axiom(axiom)
     axioms = owl_api.get_all_axiom_strings()
     assert axiom not in axioms
-
-

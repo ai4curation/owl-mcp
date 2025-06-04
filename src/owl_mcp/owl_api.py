@@ -26,6 +26,7 @@ logger = logging.getLogger("simple-owl-api")
 
 MAKEFILE_NORMALIZE_RULE = "normalize_src"
 
+
 class SimpleOwlAPI:
     """
     A simple Ontology object for working with OWL ontologies using functional syntax strings.
@@ -123,7 +124,6 @@ class SimpleOwlAPI:
                     owl_catalog_map = read_catalog(catalog_file_path)
         self._resolve_imports(owl_catalog_map)
 
-
         # Add any configured metadata axioms
         if self.pending_metadata_axioms:
             for axiom_str in self.pending_metadata_axioms:
@@ -167,14 +167,22 @@ class SimpleOwlAPI:
             if len(axioms_about_ontology) == 0:
                 # TODO: find a more efficient way to do this
                 axioms_about_ontology = [c.component for c in ontology.get_components()]
-                assert len(axioms_about_ontology) > 0, "Should have at least one axiom about the ontology"
-            import_iris = [str(axiom.first) for axiom in axioms_about_ontology if isinstance(axiom, Import)]
+                assert len(axioms_about_ontology) > 0, (
+                    "Should have at least one axiom about the ontology"
+                )
+            import_iris = [
+                str(axiom.first) for axiom in axioms_about_ontology if isinstance(axiom, Import)
+            ]
             if len(import_iris) == 0:
                 continue
             for import_iri in import_iris:
                 if import_iri in owl_catalog_map:
                     local_path = owl_catalog_map[import_iri]
-                    ontologies.append(pyhornedowl.open_ontology(local_path, serialization=guess_serialization(local_path)))
+                    ontologies.append(
+                        pyhornedowl.open_ontology(
+                            local_path, serialization=guess_serialization(local_path)
+                        )
+                    )
                 else:
                     ontologies.append(pyhornedowl.open_ontology(str(import_iri)))
         self.import_map = ontology_map
@@ -234,7 +242,9 @@ class SimpleOwlAPI:
                         subprocess.run(["make", MAKEFILE_NORMALIZE_RULE], check=True)
                     except subprocess.CalledProcessError as e:
                         # restore the backup
-                        logger.error(f"Error normalizing ontology: {e}, restoring backup from {backup_file_path}")
+                        logger.error(
+                            f"Error normalizing ontology: {e}, restoring backup from {backup_file_path}"
+                        )
                         shutil.copy(backup_file_path, self.owl_file_path)
                         raise e
                 self.file_hash = self._calculate_file_hash()
@@ -309,8 +319,9 @@ class SimpleOwlAPI:
             msg = f"Invalid regex pattern '{pattern}': {e}"
             raise re.error(msg) from e
 
-    def _matches_criteria(self, axiom_str: str, axiom_type: Optional[str],
-                         regex_pattern: Optional[re.Pattern]) -> bool:
+    def _matches_criteria(
+        self, axiom_str: str, axiom_type: Optional[str], regex_pattern: Optional[re.Pattern]
+    ) -> bool:
         """Check if an axiom matches the given criteria."""
         if axiom_type and not axiom_str.startswith(axiom_type + "("):
             return False
@@ -388,11 +399,14 @@ class SimpleOwlAPI:
             re.error: If the regex pattern is invalid
         """
         with self.lock:
-            axioms = self.get_all_axiom_strings(include_labels=False, include_imports=include_imports)
+            axioms = self.get_all_axiom_strings(
+                include_labels=False, include_imports=include_imports
+            )
             regex_pattern = self._compile_regex_pattern(pattern)
 
             matching_axioms = [
-                str(axiom) for axiom in axioms
+                str(axiom)
+                for axiom in axioms
                 if self._matches_criteria(str(axiom), axiom_type, regex_pattern)
             ]
 
@@ -405,8 +419,8 @@ class SimpleOwlAPI:
             return matching_axioms
 
     def get_all_axiom_strings(
-        self, 
-        include_labels: bool = False, 
+        self,
+        include_labels: bool = False,
         annotation_property: Optional[str] = None,
         include_imports: bool = True,
     ) -> list[str]:
@@ -575,7 +589,9 @@ class SimpleOwlAPI:
         if callback in self.observers:
             self.observers.remove(callback)
 
-    def get_labels_for_iri(self, iri: str, annotation_property: Optional[str] = None, include_imports: bool = True) -> list[str]:
+    def get_labels_for_iri(
+        self, iri: str, annotation_property: Optional[str] = None, include_imports: bool = True
+    ) -> list[str]:
         """
         Get all labels for a given IRI using a specified annotation property.
 
