@@ -1,0 +1,29 @@
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(core:=<http://example.org/core#>)
+
+Ontology(<http://example.org/core>
+
+Declaration(Class(core:Animal))
+Declaration(Class(core:Mammal))
+Declaration(Class(core:Dog))
+Declaration(Class(core:Cat))
+
+Declaration(ObjectProperty(core:hasParent))
+Declaration(DataProperty(core:hasAge))
+
+SubClassOf(core:Mammal core:Animal)
+SubClassOf(core:Dog core:Mammal)
+SubClassOf(core:Cat core:Mammal)
+
+AnnotationAssertion(rdfs:label core:Animal "Animal"@en)
+AnnotationAssertion(rdfs:label core:Mammal "Mammal"@en)
+AnnotationAssertion(rdfs:label core:Dog "Dog"@en)
+AnnotationAssertion(rdfs:label core:Cat "Cat"@en)
+AnnotationAssertion(rdfs:label core:hasParent "has parent"@en)
+AnnotationAssertion(rdfs:label core:hasAge "has age"@en)
+
+)

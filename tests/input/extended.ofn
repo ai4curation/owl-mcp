@@ -1,0 +1,49 @@
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(core:=<http://example.org/core#>)
+Prefix(ext:=<http://example.org/extended#>)
+
+Ontology(<http://example.org/extended>
+Import(<http://example.org/core>)
+
+Declaration(Class(ext:Person))
+Declaration(Class(ext:Pet))
+Declaration(NamedIndividual(ext:Fido))
+Declaration(NamedIndividual(ext:Whiskers))
+Declaration(NamedIndividual(ext:John))
+
+Declaration(ObjectProperty(ext:owns))
+Declaration(ObjectProperty(ext:livesIn))
+Declaration(DataProperty(ext:hasName))
+
+SubClassOf(ext:Person core:Mammal)
+SubClassOf(ext:Pet core:Animal)
+
+ClassAssertion(ext:Pet ext:Fido)
+ClassAssertion(core:Dog ext:Fido)
+ClassAssertion(ext:Pet ext:Whiskers)
+ClassAssertion(core:Cat ext:Whiskers)
+ClassAssertion(ext:Person ext:John)
+
+ObjectPropertyAssertion(ext:owns ext:John ext:Fido)
+ObjectPropertyAssertion(ext:owns ext:John ext:Whiskers)
+DataPropertyAssertion(ext:hasName ext:Fido "Fido"@en)
+DataPropertyAssertion(ext:hasName ext:Whiskers "Whiskers"@en)
+DataPropertyAssertion(ext:hasName ext:John "John"@en)
+DataPropertyAssertion(core:hasAge ext:Fido "3"^^xsd:int)
+DataPropertyAssertion(core:hasAge ext:Whiskers "5"^^xsd:int)
+DataPropertyAssertion(core:hasAge ext:John "30"^^xsd:int)
+
+AnnotationAssertion(rdfs:label ext:Person "Person"@en)
+AnnotationAssertion(rdfs:label ext:Pet "Pet"@en)
+AnnotationAssertion(rdfs:label ext:owns "owns"@en)
+AnnotationAssertion(rdfs:label ext:livesIn "lives in"@en)
+AnnotationAssertion(rdfs:label ext:hasName "has name"@en)
+AnnotationAssertion(rdfs:label ext:Fido "Fido"@en)
+AnnotationAssertion(rdfs:label ext:Whiskers "Whiskers"@en)
+AnnotationAssertion(rdfs:label ext:John "John"@en)
+
+)
