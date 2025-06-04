@@ -28,7 +28,7 @@ The tools operate on OWL files specified either by:
 
 ## Configuration System
 
-OWL-Server includes a configuration system that stores ontology metadata and settings 
+OWL-Server includes a configuration system that stores ontology metadata and settings
 in ~/.owl-mcp/config.yaml. This allows you to:
 
 - Define named ontologies with paths and metadata
@@ -194,10 +194,7 @@ async def find_axioms(
     api = _get_api_instance(owl_file_path)
     if isinstance(limit, str):
         # dumb AI may keep trying this with strings
-        if limit:
-            limit = int(limit)
-        else:
-            limit = 100
+        limit = int(limit) if limit else 100
     return api.find_axioms(
         pattern, include_labels=include_labels, annotation_property=annotation_property
     )[0:limit]
@@ -527,7 +524,7 @@ async def load_and_register_ontology(
     owl_file_path = os.path.abspath(owl_file_path)
 
     # Check if the ontology is already registered
-    config_manager = get_config_manager()
+    get_config_manager()
 
     # If name is not provided, derive it from the filename
     if name is None:

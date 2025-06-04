@@ -80,8 +80,8 @@ class ConfigManager:
                 return self._create_default_config()
 
             return OWLMCPConfig.model_validate(config_data)
-        except (ValidationError, yaml.YAMLError) as e:
-            logger.error(f"Error loading configuration from {self.config_path}: {e}")
+        except (ValidationError, yaml.YAMLError):
+            logger.exception(f"Error loading configuration from {self.config_path}")
             logger.info("Using default configuration instead")
             return self._create_default_config()
 
@@ -112,8 +112,8 @@ class ConfigManager:
         try:
             with open(self.config_path, "w") as f:
                 yaml.dump(self.config.model_dump(), f, default_flow_style=False)
-        except Exception as e:
-            logger.error(f"Error saving configuration to {self.config_path}: {e}")
+        except Exception:
+            logger.exception(f"Error saving configuration to {self.config_path}")
 
     def add_ontology(
         self,
