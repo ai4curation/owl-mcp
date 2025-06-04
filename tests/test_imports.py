@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from owl_mcp.owl_api import SimpleOwlAPI
@@ -90,11 +91,11 @@ def test_ontology_imports(extended_base_name):
 
         # labels
         labels = extended_api.get_labels_for_iri("core:Mammal", include_imports=True)
-        assert ["Mammal"] == labels, "Should find label for core:Mammal if include_imports is True"
+        assert labels == ["Mammal"], "Should find label for core:Mammal if include_imports is True"
         labels = extended_api.get_labels_for_iri("core:Mammal")
-        assert ["Mammal"] == labels, "Should find label for core:Mammal if include_imports is True"
+        assert labels == ["Mammal"], "Should find label for core:Mammal if include_imports is True"
         labels = extended_api.get_labels_for_iri("core:Mammal", include_imports=False)
-        assert [] == labels, "Should not find label for core:Mammal if include_imports is False"
+        assert labels == [], "Should not find label for core:Mammal if include_imports is False"
 
     finally:
         # Cleanup

@@ -1,11 +1,13 @@
 import os
 import tempfile
+
 import pytest
+
 from owl_mcp.xml_catalog_utils import (
-    read_catalog,
     find_catalog_file,
-    resolve_iri,
     load_catalog_for_ontology,
+    read_catalog,
+    resolve_iri,
 )
 
 

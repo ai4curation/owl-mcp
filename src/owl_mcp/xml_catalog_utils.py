@@ -7,10 +7,10 @@ IRI-to-file-path mappings for ontology import resolution.
 
 import os
 import xml.etree.ElementTree as ET
-from typing import Dict, Optional
+from typing import Optional
 
 
-def read_catalog(catalog_path: str, base_path: Optional[str] = None) -> Dict[str, str]:
+def read_catalog(catalog_path: str, base_path: Optional[str] = None) -> dict[str, str]:
     """
     Read an OASIS XML catalog file and return IRI-to-file-path mappings.
 
@@ -94,7 +94,7 @@ def find_catalog_file(directory: str, catalog_names: Optional[list] = None) -> O
     return None
 
 
-def resolve_iri(iri: str, catalog_mappings: Dict[str, str]) -> Optional[str]:
+def resolve_iri(iri: str, catalog_mappings: dict[str, str]) -> Optional[str]:
     """
     Resolve an IRI to a file path using catalog mappings.
 
@@ -108,7 +108,7 @@ def resolve_iri(iri: str, catalog_mappings: Dict[str, str]) -> Optional[str]:
     return catalog_mappings.get(iri)
 
 
-def load_catalog_for_ontology(ontology_path: str) -> Dict[str, str]:
+def load_catalog_for_ontology(ontology_path: str) -> dict[str, str]:
     """
     Load catalog mappings for an ontology by looking for catalog files
     in the same directory as the ontology.

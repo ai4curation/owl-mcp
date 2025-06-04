@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import pyhornedowl
-from pyhornedowl.model import OntologyAnnotation, Import
+from pyhornedowl.model import Import, OntologyAnnotation
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
@@ -137,7 +137,7 @@ class SimpleOwlAPI:
             path_to_makefile = Path(self.owl_file_path).parent / "Makefile"
             if path_to_makefile.exists():
                 # read the makefile and look for a rule that normalizes the ontology
-                with open(path_to_makefile, "r") as f:
+                with open(path_to_makefile) as f:
                     for line in f:
                         if line.startswith(MAKEFILE_NORMALIZE_RULE):
                             normalize_after_save = True
@@ -153,7 +153,7 @@ class SimpleOwlAPI:
         Resolve imports in the ontology.
         """
         if not owl_catalog_map:
-            return
+            return None
 
         ontology_map = {}
         ontologies = [self.ontology]
