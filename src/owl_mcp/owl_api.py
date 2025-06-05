@@ -242,11 +242,11 @@ class SimpleOwlAPI:
                         subprocess.run(["make", MAKEFILE_NORMALIZE_RULE], check=True)
                     except subprocess.CalledProcessError as e:
                         # restore the backup
-                        logger.error(
+                        logger.exception(
                             f"Error normalizing ontology: {e}, restoring backup from {backup_file_path}"
                         )
                         shutil.copy(backup_file_path, self.owl_file_path)
-                        raise e
+                        raise
                 self.file_hash = self._calculate_file_hash()
 
     def add_axiom(self, axiom_str: str, bypass_readonly: bool = False) -> bool:
